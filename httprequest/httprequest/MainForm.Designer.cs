@@ -73,6 +73,7 @@
             this.parametersView.RowHeadersVisible = false;
             this.parametersView.RowHeadersWidth = 62;
             this.parametersView.RowTemplate.Height = 28;
+            this.parametersView.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.parametersView.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.parametersView.Size = new System.Drawing.Size(618, 199);
             this.parametersView.TabIndex = 2;
@@ -84,7 +85,6 @@
             this.textBoxURI.Size = new System.Drawing.Size(545, 26);
             this.textBoxURI.TabIndex = 0;
             this.textBoxURI.Text = "http://api.translink.ca/rttiapi/v1/stops/$stopNo$/estimates";
-            this.textBoxURI.TextChanged += new System.EventHandler(this.TextBoxURI_TextChanged);
             // 
             // paramEnabled
             // 
@@ -106,7 +106,6 @@
             this.paramType.Name = "paramType";
             this.paramType.Sorted = true;
             this.paramType.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.paramType.Width = 150;
             // 
             // paramName
             // 

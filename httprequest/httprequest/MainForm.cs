@@ -14,13 +14,11 @@ namespace httprequest
         private const string apiKey = "";
         #endregion
 
-        private string uri;
-
         public MainForm() => InitializeComponent();
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            uri = textBoxURI.Text;
+            paramType.Width = 100;
             parametersView.Rows.Add(true, "Header", "Accept", "application/json");
             parametersView.Rows[0].ReadOnly = true;
             parametersView.Rows.Add(true, "Query", "apiKey", apiKey);
@@ -28,13 +26,12 @@ namespace httprequest
             parametersView.Rows.Add(true, "Variable", "stopNo", 53745);
         }
 
-        private void TextBoxURI_TextChanged(object sender, EventArgs e) => uri = textBoxURI.Text;
-
         private async void ButtonSend_Click(object sender, EventArgs e)
         {
             textBoxURI.Enabled = false;
             parametersView.Enabled = false;
             buttonSend.Enabled = false;
+            string uri = textBoxURI.Text;
             using HttpClient client = new();
             NameValueCollection query = HttpUtility.ParseQueryString("");
             foreach (DataGridViewRow row in parametersView.Rows)
@@ -61,15 +58,16 @@ namespace httprequest
                 }
             }
             string json = await client.GetStringAsync($"{uri}?{query}");
-            json = json.Substring(2, json.Length - 4);
-            MessageBox.Show(json);
+            Clipboard.SetText(json);
             responseView.BeginUpdate();
+            responseView.Nodes.Clear();
+            responseView.Nodes.Add("[0]");
             int tmp = 0;
             while ((tmp = json.IndexOf('\\')) != -1)
                 json = json.Remove(tmp, 1);
-            int first = 0, last = -1, end = 0, depth = 0;
-            bool[] array = { false, false, false };
-            TreeNodeCollection nodes = responseView.Nodes;
+            int first = 0, last = -1, end = 0, depth = 1;
+            bool[] array = { true, false, false, false };
+            TreeNodeCollection nodes = responseView.Nodes[0].Nodes;
             while (json.IndexOf('"', last + 1) != -1)
             {
                 end = json.IndexOfAny("}]".ToCharArray(), first);
@@ -77,20 +75,30 @@ namespace httprequest
                 last = json.IndexOf('"', first + 1);
                 string key = "";
                 string value = "";
-                if (end < first && end != -1)
+                int flag = -1;
+                while (end < first && end != -1)
                 {
+                    flag = 0;
                     last = end;
+                    end = json.IndexOfAny("}]".ToCharArray(), end + 1);
                     nodes = --depth switch
                     {
                         0 => responseView.Nodes,
                         1 => responseView.Nodes[responseView.Nodes.Count - 1].Nodes,
+                        2 => responseView.Nodes[responseView.Nodes.Count - 1]
+                            .Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes.Count - 1].Nodes,
                     };
-                    MessageBox.Show($"{depth}");
                     if (!(array[depth] && json[last + 2] == '{'))
-                        continue;
+                        flag = 1;
                 }
-                else
+                switch (flag)
+                {
+                case -1:
                     key = json.Substring(first + 1, last - first - 1);
+                    break;
+                case 1:
+                    continue;
+                }
                 first = last + 2;
                 switch (json[first])
                 {
@@ -100,12 +108,14 @@ namespace httprequest
                     else
                         nodes.Add($"{key}");
                     array[++depth] = true;
-                    MessageBox.Show($"{depth}");
                     nodes = depth switch
                     {
                         1 => responseView.Nodes[responseView.Nodes.Count - 1].Nodes,
                         2 => responseView.Nodes[responseView.Nodes.Count - 1]
-                            .Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes.Count - 1].Nodes
+                            .Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes.Count - 1].Nodes,
+                        3 => responseView.Nodes[responseView.Nodes.Count - 1]
+                            .Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes.Count - 1]
+                            .Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes.Count - 1].Nodes.Count - 1].Nodes,
                     };
                     if (json[first + 1] == '[')
                         goto case '[';
@@ -117,12 +127,14 @@ namespace httprequest
                     else
                         nodes.Add($"{key}");
                     array[++depth] = false;
-                    MessageBox.Show($"{depth}");
                     nodes = depth switch
                     {
                         1 => responseView.Nodes[responseView.Nodes.Count - 1].Nodes,
                         2 => responseView.Nodes[responseView.Nodes.Count - 1]
-                            .Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes.Count - 1].Nodes
+                            .Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes.Count - 1].Nodes,
+                        3 => responseView.Nodes[responseView.Nodes.Count - 1]
+                            .Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes.Count - 1]
+                            .Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes[responseView.Nodes[responseView.Nodes.Count - 1].Nodes.Count - 1].Nodes.Count - 1].Nodes,
                     };
                     break;
                 case '"':
